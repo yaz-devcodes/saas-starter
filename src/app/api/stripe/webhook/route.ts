@@ -75,6 +75,38 @@ async function upsertSubscriptionFromStripe(args: {
   });
 }
 
+async function downgradeSubscriptionToFreeFromStripe(
+  subscription: Stripe.Subscription,
+) {
+  const userId = subscription.metadata.userId as string | undefined;
+
+  if (userId) {
+    await prisma.subscription.updateMany({
+      where: { userId },
+      data: {
+        stripeSubId: null,
+        stripePriceId: null,
+        status: "free",
+        tier: "free",
+        currentPeriodStart: null,
+        currentPeriodEnd: null,
+      },
+    });
+  } else {
+    await prisma.subscription.updateMany({
+      where: { stripeSubId: subscription.id },
+      data: {
+        stripeSubId: null,
+        stripePriceId: null,
+        status: "free",
+        tier: "free",
+        currentPeriodStart: null,
+        currentPeriodEnd: null,
+      },
+    });
+  }
+}
+
 export async function POST(req: Request) {
   const body = await req.text();
   const hdrs = await headers();
@@ -130,10 +162,14 @@ export async function POST(req: Request) {
         }
         break;
       }
-      case "customer.subscription.updated":
-      case "customer.subscription.deleted": {
+      case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
         const firstItem = subscription.items.data[0];
+
+        if (subscription.status === "canceled") {
+          await downgradeSubscriptionToFreeFromStripe(subscription);
+          break;
+        }
 
         await upsertSubscriptionFromStripe({
           stripeSubId: subscription.id,
@@ -145,6 +181,11 @@ export async function POST(req: Request) {
           currentPeriodEnd: subscription.current_period_end,
           tier: (subscription.metadata.tier as string | undefined) ?? null,
         });
+        break;
+      }
+      case "customer.subscription.deleted": {
+        const subscription = event.data.object as Stripe.Subscription;
+        await downgradeSubscriptionToFreeFromStripe(subscription);
         break;
       }
       default:

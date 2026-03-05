@@ -9,7 +9,7 @@ export async function POST() {
 
   if (!session) {
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL ?? ""}/api/auth/signin?callbackUrl=/billing`,
+      `${process.env.NEXTAUTH_URL ?? ""}/api/auth/signin?callbackUrl=/account`,
       { status: 302 },
     );
   }
@@ -32,8 +32,6 @@ export async function POST() {
       stripeSubId: null,
       stripePriceId: null,
       status: "free",
-      tier: "free",
-      currentPeriodStart: null,
       currentPeriodEnd: null,
     },
   }).catch(async () => {
@@ -42,7 +40,6 @@ export async function POST() {
       data: {
         userId: session.user.id,
         status: "free",
-        tier: "free",
         stripeSubId: null,
         stripePriceId: null,
       },
@@ -50,7 +47,7 @@ export async function POST() {
   });
 
   return NextResponse.redirect(
-    `${process.env.NEXTAUTH_URL ?? ""}/billing?success=1`,
+    `${process.env.NEXTAUTH_URL ?? ""}/account?success=1`,
     { status: 303 },
   );
 }

@@ -11,26 +11,36 @@ function formatPrice(amount: number | null | undefined, currency: string) {
   return `${upper === "USD" ? "$" : ""}${value}`;
 }
 
-interface BillingSearchParams {
+interface AccountSearchParams {
   success?: string;
   canceled?: string;
 }
 
-export default async function BillingPage(props: {
-  searchParams: Promise<BillingSearchParams>;
+export default async function AccountPage(props: {
+  searchParams: Promise<AccountSearchParams>;
 }) {
   const searchParams = await props.searchParams;
   const session = await getServerSession(authOptions);
 
   if (!session) {
-    redirect("/api/auth/signin?callbackUrl=/billing");
+    redirect("/api/auth/signin?callbackUrl=/account");
   }
 
-  const subscription = await prisma.subscription.findUnique({
-    where: { userId: session.user.id },
-  });
+  type SubscriptionInfo = {
+    status: string;
+    tier?: string | null;
+    currentPeriodStart?: Date | null;
+    currentPeriodEnd?: Date | null;
+  };
 
-  const currentTier = subscription?.tier ?? "free";
+  const subscription = (await prisma.subscription.findUnique({
+    where: { userId: session.user.id },
+  })) as SubscriptionInfo | null;
+
+  const currentTier =
+    subscription?.status === "free"
+      ? "free"
+      : subscription?.tier ?? "free";
   const lastPaidAt =
     subscription?.currentPeriodStart ?? subscription?.currentPeriodEnd ?? null;
   const nextBillingAt = subscription?.currentPeriodEnd ?? null;
@@ -101,10 +111,14 @@ export default async function BillingPage(props: {
       <div className="mx-auto max-w-5xl px-4 py-12 sm:px-8 sm:py-16">
         <header className="space-y-2">
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            Billing &amp; Plan
+            Account
           </h1>
           <p className="max-w-2xl text-sm text-slate-700 sm:text-base">
-            Manage your current subscription and change plans.
+            Signed in as{" "}
+            <span className="font-medium text-slate-900">
+              {session.user?.email ?? session.user?.name ?? "Unknown"}
+            </span>
+            . Manage your profile and subscription details here.
           </p>
         </header>
 

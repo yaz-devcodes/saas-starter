@@ -7,8 +7,9 @@ import { signIn, signOut, useSession } from "next-auth/react";
 
 const navLinks = [
   { href: "/", label: "Home" },
+  { href: "/app", label: "App" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/dashboard", label: "Dashboard" },
+  { href: "/account", label: "Account" },
 ];
 
 export function TopNav() {
@@ -85,8 +86,8 @@ export function TopNav() {
           ) : !session ? (
             <button
               type="button"
-              onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
-                className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-1.5 text-xs font-medium text-slate-50 transition hover:bg-slate-800"
+              onClick={() => signIn("github", { callbackUrl: "/app" })}
+              className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-1.5 text-xs font-medium text-slate-50 transition hover:bg-slate-800"
             >
               Sign in with GitHub
             </button>
@@ -103,11 +104,11 @@ export function TopNav() {
               {menuOpen && (
                 <div className="absolute right-0 top-10 w-48 rounded-xl border border-slate-200 bg-white p-2 text-xs shadow-lg">
                   <Link
-                    href="/billing"
+                    href="/account"
                     className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-slate-800 hover:bg-slate-100"
                     onClick={() => setMenuOpen(false)}
                   >
-                    <span>Manage subscription</span>
+                    <span>Account &amp; billing</span>
                   </Link>
                   <button
                     type="button"

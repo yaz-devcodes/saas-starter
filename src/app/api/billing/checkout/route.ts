@@ -14,7 +14,7 @@ export async function POST(request: Request) {
 
   if (!session || !session.user?.email) {
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL ?? ""}/api/auth/signin?callbackUrl=/billing`,
+      `${process.env.NEXTAUTH_URL ?? ""}/api/auth/signin?callbackUrl=/account`,
       { status: 302 },
     );
   }
@@ -59,8 +59,8 @@ export async function POST(request: Request) {
         userId: session.user.id,
         tier: requestedTier,
       },
-      success_url: `${process.env.NEXTAUTH_URL}/billing?success=1`,
-      cancel_url: `${process.env.NEXTAUTH_URL}/billing?canceled=1`,
+      success_url: `${process.env.NEXTAUTH_URL}/account?success=1`,
+      cancel_url: `${process.env.NEXTAUTH_URL}/account?canceled=1`,
     });
 
     if (!checkoutSession.url) {

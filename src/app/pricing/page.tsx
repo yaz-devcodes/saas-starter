@@ -143,7 +143,7 @@ export default async function PricingPage() {
               <div className="mt-5">
                 {tier.id === "free" ? (
                   <a
-                    href="/dashboard"
+                    href="/app"
                     className="inline-flex w-full items-center justify-center rounded-full border border-slate-300 px-4 py-2 text-xs font-medium text-slate-800 transition hover:border-slate-400 hover:bg-slate-50"
                   >
                     {tier.ctaLabel}
