@@ -59,7 +59,8 @@ async function upsertSubscriptionFromStripe(args: {
 
 export async function POST(req: Request) {
   const body = await req.text();
-  const sig = headers().get("stripe-signature");
+  const hdrs = await headers();
+  const sig = hdrs.get("stripe-signature");
 
   if (!sig || !process.env.STRIPE_WEBHOOK_SECRET) {
     return new NextResponse("Webhook signature or secret missing", {
