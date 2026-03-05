@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
+import { AccountActions } from "@/components/account-actions";
 
 function formatPrice(amount: number | null | undefined, currency: string) {
   if (amount == null) return "$0";
@@ -256,6 +257,7 @@ export default async function AccountPage(props: {
                 </p>
               </div>
             </div>
+            <AccountActions />
           </aside>
         </section>
       </div>
