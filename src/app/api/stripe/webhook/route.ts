@@ -12,6 +12,7 @@ async function upsertSubscriptionFromStripe(args: {
   customerEmail?: string | null;
   priceId?: string | null;
   status: string;
+  currentPeriodStart?: number | null;
   currentPeriodEnd?: number | null;
   tier?: string | null;
 }) {
@@ -21,6 +22,7 @@ async function upsertSubscriptionFromStripe(args: {
     customerEmail,
     priceId,
     status,
+    currentPeriodStart,
     currentPeriodEnd,
     tier,
   } = args;
@@ -50,6 +52,9 @@ async function upsertSubscriptionFromStripe(args: {
       stripePriceId: priceId ?? undefined,
       status,
       tier: tier ?? undefined,
+      currentPeriodStart: currentPeriodStart
+        ? new Date(currentPeriodStart * 1000)
+        : null,
       currentPeriodEnd: currentPeriodEnd
         ? new Date(currentPeriodEnd * 1000)
         : null,
@@ -60,6 +65,9 @@ async function upsertSubscriptionFromStripe(args: {
       stripePriceId: priceId ?? undefined,
       status,
       tier: tier ?? undefined,
+      currentPeriodStart: currentPeriodStart
+        ? new Date(currentPeriodStart * 1000)
+        : null,
       currentPeriodEnd: currentPeriodEnd
         ? new Date(currentPeriodEnd * 1000)
         : null,
@@ -112,6 +120,7 @@ export async function POST(req: Request) {
               null,
             priceId: firstItem?.price.id ?? null,
             status: subscription.status,
+            currentPeriodStart: subscription.current_period_start,
             currentPeriodEnd: subscription.current_period_end,
             tier:
               (subscription.metadata.tier as string | undefined) ??
@@ -132,6 +141,7 @@ export async function POST(req: Request) {
           customerEmail: null,
           priceId: firstItem?.price.id ?? null,
           status: subscription.status,
+          currentPeriodStart: subscription.current_period_start,
           currentPeriodEnd: subscription.current_period_end,
           tier: (subscription.metadata.tier as string | undefined) ?? null,
         });

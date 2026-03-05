@@ -57,6 +57,7 @@ model Subscription {
   stripePriceId    String?
   stripeSubId      String?
   status           String   @default("free")
+  currentPeriodStart DateTime?
   currentPeriodEnd DateTime?
   tier             String?
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)

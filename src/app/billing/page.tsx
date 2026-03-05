@@ -2,51 +2,14 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { stripe } from "@/lib/stripe";
 
-const tiers = [
-  {
-    id: "free",
-    name: "Free",
-    price: "$0",
-    period: "month",
-    description: "Get started with a basic dashboard and GitHub login.",
-    features: [
-      "GitHub authentication",
-      "Access to main dashboard",
-      "Up to 1 project",
-    ],
-    tierValue: "free",
-  },
-  {
-    id: "hobby",
-    name: "Hobby",
-    price: "$19",
-    period: "month",
-    description: "For small side projects that need real billing.",
-    features: [
-      "Everything in Free",
-      "Up to 5 projects",
-      "Stripe-powered subscription",
-      "Email support",
-    ],
-    tierValue: "hobby",
-    highlighted: true,
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    price: "$49",
-    period: "month",
-    description: "For teams and production apps with higher usage.",
-    features: [
-      "Everything in Hobby",
-      "Unlimited projects",
-      "Team access",
-      "Priority support",
-    ],
-    tierValue: "pro",
-  },
-];
+function formatPrice(amount: number | null | undefined, currency: string) {
+  if (amount == null) return "$0";
+  const value = (amount / 100).toFixed(0);
+  const upper = currency.toUpperCase();
+  return `${upper === "USD" ? "$" : ""}${value}`;
+}
 
 interface BillingSearchParams {
   success?: string;
@@ -68,6 +31,70 @@ export default async function BillingPage(props: {
   });
 
   const currentTier = subscription?.tier ?? "free";
+  const lastPaidAt =
+    subscription?.currentPeriodStart ?? subscription?.currentPeriodEnd ?? null;
+  const nextBillingAt = subscription?.currentPeriodEnd ?? null;
+
+  const hobbyPriceId = process.env.STRIPE_PRICE_ID;
+  const proPriceId = process.env.STRIPE_PRICE_ID_PRO;
+
+  const [hobbyPrice, proPrice] = await Promise.all([
+    hobbyPriceId ? stripe.prices.retrieve(hobbyPriceId) : null,
+    proPriceId ? stripe.prices.retrieve(proPriceId) : null,
+  ]);
+
+  const tiers = [
+    {
+      id: "free",
+      name: "Free",
+      price: "$0",
+      period: "month",
+      description: "Get started with a basic dashboard and GitHub login.",
+      features: [
+        "GitHub authentication",
+        "Access to main dashboard",
+        "Up to 1 project",
+      ],
+      tierValue: "free",
+    },
+    {
+      id: "hobby",
+      name: "Hobby",
+      price: formatPrice(
+        typeof hobbyPrice?.unit_amount === "number"
+          ? hobbyPrice.unit_amount
+          : null,
+        hobbyPrice?.currency ?? "usd",
+      ),
+      period: "month",
+      description: "For small side projects that need real billing.",
+      features: [
+        "Everything in Free",
+        "Up to 5 projects",
+        "Stripe-powered subscription",
+        "Email support",
+      ],
+      tierValue: "hobby",
+      highlighted: true,
+    },
+    {
+      id: "pro",
+      name: "Pro",
+      price: formatPrice(
+        typeof proPrice?.unit_amount === "number" ? proPrice.unit_amount : null,
+        proPrice?.currency ?? "usd",
+      ),
+      period: "month",
+      description: "For teams and production apps with higher usage.",
+      features: [
+        "Everything in Hobby",
+        "Unlimited projects",
+        "Team access",
+        "Priority support",
+      ],
+      tierValue: "pro",
+    },
+  ];
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
@@ -184,6 +211,20 @@ export default async function BillingPage(props: {
                   ? "Pro plan"
                   : "Free plan"}
               </p>
+              <div className="mt-4 space-y-1 text-xs text-slate-600">
+                <p>
+                  <span className="font-medium">Last payment:</span>{" "}
+                  {currentTier === "free" || !lastPaidAt
+                    ? "N/A"
+                    : lastPaidAt.toLocaleDateString()}
+                </p>
+                <p>
+                  <span className="font-medium">Next billing:</span>{" "}
+                  {currentTier === "free" || !nextBillingAt
+                    ? "N/A"
+                    : nextBillingAt.toLocaleDateString()}
+                </p>
+              </div>
             </div>
           </aside>
         </section>
