@@ -52,11 +52,12 @@ model VerificationToken {
 }
 
 model Subscription {
-  id             String   @id @default(cuid())
-  userId         String   @unique
-  stripePriceId  String?
-  stripeSubId    String?
-  status         String   @default("free")
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  stripePriceId    String?
+  stripeSubId      String?
+  status           String   @default("free")
   currentPeriodEnd DateTime?
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tier             String?
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

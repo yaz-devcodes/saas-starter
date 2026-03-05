@@ -14,10 +14,9 @@ export default async function DashboardPage() {
     where: { userId: session.user.id },
   });
 
+  const rawTier = subscription?.tier ?? "free";
   const planLabel =
-    subscription?.status === "active" || subscription?.status === "trialing"
-      ? "Starter"
-      : "Free";
+    rawTier === "hobby" ? "Hobby" : rawTier === "pro" ? "Pro" : "Free";
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
@@ -45,7 +44,7 @@ export default async function DashboardPage() {
             <p className="mt-1 text-xs text-slate-600">
               {planLabel === "Free"
                 ? "Upgrade to unlock additional features and higher limits."
-                : "You have access to the full Starter feature set."}
+                : `You have access to the ${planLabel} feature set.`}
             </p>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white p-4">

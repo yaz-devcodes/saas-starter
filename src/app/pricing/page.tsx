@@ -1,3 +1,7 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+
 const tiers = [
   {
     id: "free",
@@ -46,7 +50,18 @@ const tiers = [
   },
 ];
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const session = await getServerSession(authOptions);
+
+  let currentTier: string | null = null;
+
+  if (session?.user?.id) {
+    const subscription = await prisma.subscription.findUnique({
+      where: { userId: session.user.id },
+    });
+    currentTier = subscription?.tier ?? null;
+  }
+
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
       <div className="mx-auto max-w-5xl px-4 py-12 sm:px-8 sm:py-16">
@@ -65,7 +80,9 @@ export default function PricingPage() {
         </header>
 
         <section className="mt-10 grid gap-6 md:grid-cols-3">
-          {tiers.map((tier) => (
+          {tiers.map((tier) => {
+            const isCurrent = currentTier === tier.tierValue;
+            return (
             <article
               key={tier.id}
               className={`flex flex-col rounded-2xl border bg-white p-6 text-sm shadow-sm ${
@@ -78,6 +95,11 @@ export default function PricingPage() {
                 <h2 className="text-sm font-semibold text-slate-900">
                   {tier.name}
                 </h2>
+                {isCurrent && (
+                  <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-emerald-600">
+                    Current plan
+                  </p>
+                )}
                 <p className="text-xs text-slate-600">{tier.description}</p>
               </div>
               <div className="mt-4 flex items-baseline gap-1">
@@ -111,19 +133,21 @@ export default function PricingPage() {
                     <input type="hidden" name="tier" value={tier.tierValue} />
                     <button
                       type="submit"
+                      disabled={isCurrent}
                       className={`inline-flex w-full items-center justify-center rounded-full px-4 py-2 text-xs font-medium transition ${
                         tier.highlighted
-                          ? "bg-slate-900 text-slate-50 hover:bg-slate-800"
-                          : "border border-slate-300 text-slate-800 hover:border-slate-400 hover:bg-slate-50"
+                          ? "bg-slate-900 text-slate-50 hover:bg-slate-800 disabled:bg-slate-300 disabled:text-slate-600"
+                          : "border border-slate-300 text-slate-800 hover:border-slate-400 hover:bg-slate-50 disabled:bg-slate-100 disabled:text-slate-500"
                       }`}
                     >
-                      {tier.ctaLabel}
+                      {isCurrent ? "Current plan" : tier.ctaLabel}
                     </button>
                   </form>
                 )}
               </div>
             </article>
-          ))}
+          );
+          })}
         </section>
       </div>
     </main>

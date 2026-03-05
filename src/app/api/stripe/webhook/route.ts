@@ -13,9 +13,17 @@ async function upsertSubscriptionFromStripe(args: {
   priceId?: string | null;
   status: string;
   currentPeriodEnd?: number | null;
+  tier?: string | null;
 }) {
-  const { stripeSubId, userId, customerEmail, priceId, status, currentPeriodEnd } =
-    args;
+  const {
+    stripeSubId,
+    userId,
+    customerEmail,
+    priceId,
+    status,
+    currentPeriodEnd,
+    tier,
+  } = args;
 
   let user = null;
 
@@ -41,6 +49,7 @@ async function upsertSubscriptionFromStripe(args: {
       stripeSubId,
       stripePriceId: priceId ?? undefined,
       status,
+      tier: tier ?? undefined,
       currentPeriodEnd: currentPeriodEnd
         ? new Date(currentPeriodEnd * 1000)
         : null,
@@ -50,6 +59,7 @@ async function upsertSubscriptionFromStripe(args: {
       stripeSubId,
       stripePriceId: priceId ?? undefined,
       status,
+      tier: tier ?? undefined,
       currentPeriodEnd: currentPeriodEnd
         ? new Date(currentPeriodEnd * 1000)
         : null,
@@ -103,6 +113,10 @@ export async function POST(req: Request) {
             priceId: firstItem?.price.id ?? null,
             status: subscription.status,
             currentPeriodEnd: subscription.current_period_end,
+            tier:
+              (subscription.metadata.tier as string | undefined) ??
+              (session.metadata?.tier as string | undefined) ??
+              null,
           });
         }
         break;
@@ -119,6 +133,7 @@ export async function POST(req: Request) {
           priceId: firstItem?.price.id ?? null,
           status: subscription.status,
           currentPeriodEnd: subscription.current_period_end,
+          tier: (subscription.metadata.tier as string | undefined) ?? null,
         });
         break;
       }
