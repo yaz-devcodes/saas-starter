@@ -15,6 +15,9 @@ export function TopNav() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteInput, setDeleteInput] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -116,12 +119,87 @@ export function TopNav() {
                   >
                     <span>Logout</span>
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setDeleteInput("");
+                      setShowDeleteModal(true);
+                    }}
+                    className="mt-1 flex w-full items-center justify-between rounded-lg px-3 py-2 text-red-600 hover:bg-red-50"
+                  >
+                    <span>Delete account</span>
+                  </button>
                 </div>
               )}
             </div>
           )}
         </div>
       </div>
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 text-sm text-slate-900 shadow-xl">
+            <h2 className="text-base font-semibold text-slate-900">
+              Delete account
+            </h2>
+            <p className="mt-2 text-xs text-slate-600">
+              This will permanently delete your account, subscription, and all
+              associated data. This action cannot be undone.
+            </p>
+            <p className="mt-3 text-xs text-slate-600">
+              To confirm, type{" "}
+              <span className="font-semibold text-slate-900">Agree</span> below
+              and click Confirm.
+            </p>
+            <input
+              type="text"
+              value={deleteInput}
+              onChange={(e) => setDeleteInput(e.target.value)}
+              className="mt-3 w-full rounded-md border border-slate-300 px-2 py-1.5 text-xs outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500"
+              placeholder="Type Agree to confirm"
+            />
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isDeleting) {
+                    setShowDeleteModal(false);
+                    setDeleteInput("");
+                  }
+                }}
+                className="rounded-full border border-slate-300 px-4 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleteInput !== "Agree" || isDeleting}
+                onClick={async () => {
+                  if (deleteInput !== "Agree") return;
+                  try {
+                    setIsDeleting(true);
+                    const res = await fetch("/api/account/delete", {
+                      method: "POST",
+                    });
+                    if (!res.ok) {
+                      // eslint-disable-next-line no-console
+                      console.error("Failed to delete account");
+                    }
+                  } finally {
+                    setIsDeleting(false);
+                    setShowDeleteModal(false);
+                    setDeleteInput("");
+                    void signOut({ callbackUrl: "/" });
+                  }
+                }}
+                className="rounded-full bg-red-600 px-4 py-1.5 text-xs font-medium text-white transition enabled:hover:bg-red-700 disabled:bg-red-300"
+              >
+                {isDeleting ? "Deleting..." : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
