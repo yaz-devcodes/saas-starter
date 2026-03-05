@@ -2,15 +2,13 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 
-interface BillingPageProps {
-  searchParams?: {
-    success?: string;
-    canceled?: string;
-  };
+interface BillingSearchParams {
+  success?: string;
+  canceled?: string;
 }
 
 export default async function BillingPage(props: {
-  searchParams: Promise<BillingPageProps>;
+  searchParams: Promise<BillingSearchParams>;
 }) {
   const searchParams = await props.searchParams;
   const session = await getServerSession(authOptions);
