@@ -128,6 +128,7 @@ export default async function BillingPage(props: {
             <div className="mt-4 grid gap-4 md:grid-cols-3">
               {tiers.map((tier) => {
                 const isCurrent = currentTier === tier.tierValue;
+                const isFree = tier.id === "free";
                 return (
                   <article
                     key={tier.id}
@@ -164,10 +165,25 @@ export default async function BillingPage(props: {
                       ))}
                     </ul>
                     <div className="mt-4">
-                      {tier.id === "free" ? (
-                        <span className="inline-flex w-full items-center justify-center rounded-full border border-slate-300 px-3 py-1.5 text-[11px] font-medium text-slate-700">
-                          {isCurrent ? "Current plan" : "Included"}
-                        </span>
+                      {isFree ? (
+                        isCurrent ? (
+                          <span className="inline-flex w-full items-center justify-center rounded-full border border-slate-300 px-3 py-1.5 text-[11px] font-medium text-slate-700">
+                            Current plan
+                          </span>
+                        ) : (
+                          <form
+                            action="/api/billing/cancel"
+                            method="POST"
+                            className="w-full"
+                          >
+                            <button
+                              type="submit"
+                              className="inline-flex w-full items-center justify-center rounded-full border border-slate-300 px-3 py-1.5 text-[11px] font-medium text-slate-800 transition hover:border-slate-400 hover:bg-slate-50"
+                            >
+                              Downgrade to Free
+                            </button>
+                          </form>
+                        )
                       ) : (
                         <form
                           action="/api/billing/checkout"
